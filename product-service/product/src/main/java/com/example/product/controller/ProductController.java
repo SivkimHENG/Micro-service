@@ -1,58 +1,57 @@
 package com.example.product.controller;
 
-
 import com.example.product.dto.ProductDto;
 import com.example.product.model.Product;
+import com.example.product.repository.ProductRepository;
 import com.example.product.service.ProductService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.coyote.Response;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/products")
 public class ProductController {
     private final ProductService service;
 
+    @GetMapping
+    public ResponseEntity<List<ProductDto>> getAll() {
+        List<ProductDto> products = service.getAllProducts();
+         return ResponseEntity.ok(products);
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDto> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.toDto(service.getProductById(id)));
+
+    }
     @PostMapping
-    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto dto) {
-        Product createdProduct = service.createProduct(dto);
-
-        ProductDto response = new ProductDto();
-        response.setName(createdProduct.getName());
-        response.setDescription(createdProduct.getDescription());
-        response.setCreatedAt(createdProduct.getCreatedAt());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<ProductDto> create(@RequestBody ProductDto dto) {
+        log.info("Receive : {}", dto);
+        return ResponseEntity.ok(service.createProduct(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto>
-    updateProduct(@PathVariable UUID id, @RequestBody ProductDto dto
-    ) {
-        Product updateProduct = service.updatedProduct(id,dto);
-
-        ProductDto response = new ProductDto();
-        response.setName(updateProduct.getName());
-        response.setDescription(updateProduct.getDescription());
-        response.setUpdatedAt(updateProduct.getUpdatedAt());
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ProductDto> update(@PathVariable UUID id, @RequestBody ProductDto dto) {
+        ProductDto updated = service.updatedProduct(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("/bulk")
-    public ResponseEntity<List<ProductDto>> bulkUpsert(
-            @RequestBody List<ProductDto> dto
-    ) {
-        List<ProductDto> savedProduct = service.bulkUpsert(dto);
-        return ResponseEntity.ok(savedProduct);
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        service.deleteProduct(id);
+        return ResponseEntity.noContent().build();
     }
+
 
 
 

@@ -15,7 +15,6 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "pricing_rules")
 
 public class PricingRule {
 
@@ -27,7 +26,9 @@ public class PricingRule {
     private Instant startDate;
     private Instant endDate;
 
-    private UUID product_id;
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
 
 

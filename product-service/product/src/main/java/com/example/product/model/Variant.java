@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
-@Table(name = "variants")
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,8 +25,9 @@ public class Variant {
     private String title;
 
     @ManyToOne
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
 
 
 

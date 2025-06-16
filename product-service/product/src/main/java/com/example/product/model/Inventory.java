@@ -5,13 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.integration.config.EnableMessageHistory;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "inventories")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,14 +21,14 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private UUID productId;
-
     private int quantity;
     private int reserve;
     private Instant updatedAt;
 
 
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
 
 

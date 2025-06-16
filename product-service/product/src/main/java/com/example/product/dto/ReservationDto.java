@@ -1,7 +1,7 @@
 package com.example.product.dto;
 
 import lombok.Data;
-import org.hibernate.validator.constraints.UUID;
+import java.util.UUID;
 
 @Data
 public class ReservationDto {

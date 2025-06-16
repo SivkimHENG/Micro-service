@@ -3,6 +3,12 @@ server:
 spring:
   application:
     name: authentication-service
+    security:
+      jwt:
+        secret-key: 4bb6d1dfbafb64a681139d1586b6f1160d18159afd57c8c79136d7490630407c
+        access-token-expiration: 86400000
+        refresh-token-expiration: 604800000
+
   datasource:
     url: jdbc:postgresql://localhost:5432/authentication_db
     username: postgres
@@ -29,10 +35,6 @@ logging:
   level:
     org.hibernate.SQL: WARN    # SQL statements
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # bind parameter values
+    org.springframework.security: DEBUG
 
-jwt:
-  secret-key: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
-  expiration-time: 36000000
-  private-key: classpath:jwt/app.key
-  public-key: classpath:jwt/app.pub
-  ttl: 15m
+

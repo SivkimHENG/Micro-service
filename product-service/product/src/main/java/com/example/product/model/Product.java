@@ -6,10 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name =  "products")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +31,20 @@ public class Product {
 
     private Instant createdAt;
     private Instant updatedAt;
+
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Inventory> inventories;
+
+    @OneToMany(mappedBy = "product" , cascade = CascadeType.ALL)
+    private List<PricingRule> pricingRules;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Variant> variants;
+
+    @Version
+    private Long version;
+
 
 
 }
