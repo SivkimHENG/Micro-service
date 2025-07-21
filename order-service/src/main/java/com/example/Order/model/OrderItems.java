@@ -1,6 +1,5 @@
 package com.example.Order.model;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -10,36 +9,41 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Embeddable
+@Entity
 @Data
-@Table (name = "order_items")
 @Setter
 @Getter
 @RequiredArgsConstructor
 
-
-
 public class OrderItems {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "order_id", nullable = false)
+  private Order order;
 
+  @Column(nullable = false)
+  private UUID productId;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+  @Column(nullable = false)
+  private String productName;
 
-    @Column(name = "product_id", nullable = false)
-    private UUID productId;
+  @Column(nullable = false)
+  private String productSku;
 
-    private int  quantity;
+  @Column(nullable = false)
+  private int quantity;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+  @Column(nullable = false, precision = 10, scale = 2)
+  private BigDecimal price;
 
+  @Column(precision = 10, scale = 2)
+  private BigDecimal discountAmount;
 
-
+  @Column(length = 500)
+  private String specialInstructions;
 
 }

@@ -1,23 +1,38 @@
 package com.example.Order.dto;
 
-
-import com.example.Order.enums.OrderStatus;
-import lombok.Data;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Data
-public class OrderDto {
+import com.example.Order.enums.OrderStatus;
+import com.example.Order.enums.OrderType;
 
-    private UUID id;
-    private OrderStatus status;
-    private BigDecimal totalPrice;
-    private Instant createdAt;
-    private Instant updatedAt;
-    private List<OrderItemsDto> item ;
+import com.example.Order.model.Order;
+import lombok.Data;
 
-}
+public record OrderDto(
+ UUID id,
+ String orderNumber,
+ UUID customerId,
+ OrderStatus status,
+ OrderType orderType,
+ List<OrderItemDto> items,
+ OrderPricingDto price,
+ ShippingAddressDto shippingAdress,
+ BillingAddressDto billingAddress,
+ LocalDateTime createdAt,
+ LocalDateTime updatedAt,
+ LocalDateTime completeAt,
+ LocalDateTime cancelledAt,
+ String notes) {
+
+
+
+
+
+
+
+
+
+
+ }

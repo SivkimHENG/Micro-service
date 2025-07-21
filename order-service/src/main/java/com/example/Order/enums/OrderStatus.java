@@ -2,10 +2,10 @@ package com.example.Order.enums;
 
 public enum OrderStatus {
     PENDING,
-    PLACED,
-    PAID,
+    CONFIRMED,
+    PROCESSING,
     SHIPPED,
+    DELIVERED,
     CANCELLED,
-    DRAFT
-
+    REFUNDED
 }
