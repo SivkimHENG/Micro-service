@@ -9,13 +9,12 @@ import lombok.Data;
  * OrderPricingDto
  */
 
-@Data
-public class OrderPricingDto {
+public record OrderPricingDto(
+    BigDecimal subtotal,
+    BigDecimal taxAmount,
+    BigDecimal DiscountAmount,
+    BigDecimal totalAmount,
+    String currency ){
 
-  private BigDecimal subtotal;
-  private BigDecimal taxAmount;
-  private BigDecimal DiscountAmount;
-  private BigDecimal totalAmount;
-  private String currency;
 
 }

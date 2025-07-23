@@ -6,16 +6,14 @@ import lombok.Data;
 /**
  * ShippingAddressDto
  */
-@Data
-public class ShippingAddressDto {
-
-  private String recipientName;
-  private String addressLine1;
-  private String addressLine2;
-  private String city;
-  private String state;
-  private String postalCode;
-  private String country;
-  private String phoneNumber;
-
+public record ShippingAddressDto (
+   String recipientName,
+   String addressLine1,
+   String addressLine2,
+   String city,
+   String state,
+   String postalCode,
+   String country,
+   String phoneNumber
+   ) {
 }

@@ -1,66 +1,63 @@
 
 package com.example.Order.mapper;
+
 import com.example.Order.dto.OrderDto;
-import com.example.Order.request.CreateOrderItemRequest;
-import com.example.Order.request.CreateOrderRequest;
+import com.example.Order.dto.OrderItemDto;
 import com.example.Order.model.Order;
-import com.example.Order.model.OrderItems;
-import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
+import com.example.Order.model.OrderPricing;
+import com.example.Order.model.ShippingAddress;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * OrderMapper
  */
 
-@Mapper( componentModel =  "spring",uses = {
-       OrderItemMapper.class,
- //      OrderPricingMapper.class,
-  //     AddressMapper.class
-},
-      nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
-)
-public interface OrderMapper {
+@Component
+public class OrderMapper implements Function<Order, OrderDto> {
 
-  OrderMapper INSTANCE = Mappers.getMapper(OrderMapper.class);
+  private final OrderItemMapper orderItemMapper;
+  private final OrderPricingMapper orderPricingMapper;
+  private final BillingAddressMapper billingAddressMapper;
+  private final ShippingAddressMapper shippingAddressMapper;
 
-  @Mapping(target = "items",source = "orderItems")
-  @Mapping(target = "shippingAddress", source = "shippingAddress")
-  OrderDto toDto(Order order);
+  public OrderMapper(OrderItemMapper orderItemMapper, OrderPricingMapper orderPricingMapper,
+      BillingAddressMapper billingAddressMapper, ShippingAddressMapper shippingAddressMapper) {
+    this.orderItemMapper = orderItemMapper;
+    this.orderPricingMapper = orderPricingMapper;
+    this.billingAddressMapper = billingAddressMapper;
+    this.shippingAddressMapper = shippingAddressMapper;
+  }
 
+  @Override
+  public OrderDto apply(Order order) {
+    if (order == null) {
+      throw new RuntimeException("Order cannot be null.");
+    }
+    return new OrderDto(
+        order.getId(),
+        order.getOrderNumber(),
+        order.getCustomerId(),
+        order.getStatus(),
+        order.getOrderType(),
+        mapItems(order),
+        orderPricingMapper.apply(order.getOrderPricing()),
+        shippingAddressMapper.apply(order.getShippingAddress()),
+        billingAddressMapper.apply(order.getBillingAddress()),
+        order.getCreatedAt(),
+        order.getUpdatedAt(),
+        order.getCompleteAt(),
+        order.getCancelledAt(),
+        order.getNotes(),
+        order.getVersion());
+  }
 
-  @Mapping(target = "orderItems", source = "items")
-  @Mapping(target = "shippingAddress", source = "shippingAddress")
-  Order toEntity(OrderDto dto);
-
-
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "orderNumber", ignore = true)
-  @Mapping(target = "status", constant = "PENDING")
-  @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-  @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-  @Mapping(target = "completeAt", ignore = true)
-  @Mapping(target = "cancelledAt", ignore = true)
-  @Mapping(target = "orderItems", source = "items")
-  Order fromCreateRequest(CreateOrderRequest request);
-
-
-  List<OrderDto> toDtoList(List<Order> orders);
-  List<Order> toEntityList(List<OrderDto> dtos);
-
-
-  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "createdAt",ignore = true)
-  @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-  void updateOrderFromDto(OrderDto dto, @MappingTarget Order order);
-
-
-  @Mapping(target = "id",ignore = true)
-  @Mapping(target = "order", ignore = true)
-  OrderItems fromCreateItemRequest(CreateOrderItemRequest request);
-
-
-
+  private List<OrderItemDto> mapItems(Order order) {
+    return order.getItems().stream().map(orderItemMapper).toList();
+  }
 }

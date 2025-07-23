@@ -17,14 +17,16 @@ public record OrderDto(
  OrderStatus status,
  OrderType orderType,
  List<OrderItemDto> items,
- OrderPricingDto price,
- ShippingAddressDto shippingAdress,
+ OrderPricingDto orderPricing,
+ ShippingAddressDto shippingAddress,
  BillingAddressDto billingAddress,
  LocalDateTime createdAt,
  LocalDateTime updatedAt,
  LocalDateTime completeAt,
  LocalDateTime cancelledAt,
- String notes) {
+ String notes,
+ Long version
+) {
 
 
 

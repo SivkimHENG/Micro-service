@@ -1,12 +1,9 @@
-package com.example.Order.respository;
+package com.example.Order.repository;
 
-import com.example.Order.dto.OrderDto;
 import com.example.Order.enums.OrderStatus;
 import com.example.Order.model.Order;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,7 +12,7 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-  Optional<Order> findByOrderNumber(String orderNumber);
+  Optional <Order> findByOrderNumber(String orderNumber);
 
   List<Order> findByCustomerId(UUID customerId);
 

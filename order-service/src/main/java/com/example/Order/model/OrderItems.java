@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.kafka.common.annotation.InterfaceStability;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @RequiredArgsConstructor
+@Table(name = "order_items")
 
 public class OrderItems {
 

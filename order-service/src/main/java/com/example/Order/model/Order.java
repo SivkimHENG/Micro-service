@@ -4,24 +4,19 @@ import com.example.Order.enums.OrderStatus;
 import com.example.Order.enums.OrderType;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Setter
 @Getter
-@NoArgsConstructor
+@Setter
+@Table(name = "orders")
 public class Order {
 
   @Id
@@ -54,13 +49,18 @@ public class Order {
   @Embedded
   private BillingAddress billingAddress;
 
-  @Column(nullable = false)
+  @CreationTimestamp
+  @Column(nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
+  @UpdateTimestamp
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
   private LocalDateTime completeAt;
+  private LocalDateTime shippedAt;
+  private LocalDateTime deliveredAt;
+  private LocalDateTime returnedAt;
   private LocalDateTime cancelledAt;
 
   @Column(length = 100)
@@ -68,5 +68,5 @@ public class Order {
 
   @Version
   private Long version;
-
 }
+

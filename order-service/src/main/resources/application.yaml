@@ -1,8 +1,24 @@
 spring:
+  application:
+    name: order-service
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        health-check-path: /actuator/health
+        register: true
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${server.port}
+        service-name: order-service
+
   datasource:
     url: jdbc:postgresql://localhost:5432/order_microservice
     username: postgres
-    password:
+    password: '' # or use ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -10,6 +26,7 @@ spring:
       idle-timeout: 600000
       connection-timeout: 30000
       max-lifetime: 1800000
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,10 +40,23 @@ spring:
 
 server:
   port: 8081
+  servlet:
+    context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
     org:
       springframework:
-        jdbc: DEBUG
-        orm: DEBUG
+        jdbc:
+          core: DEBUG
+        orm:
+          jpa: DEBUG

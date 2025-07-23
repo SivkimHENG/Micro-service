@@ -10,7 +10,7 @@ POST,/orders/{id}/cancel,Cancel order by UUID,cancel(UUID)
 POST,/orders/{id}/complete,Complete order by UUID,complete(UUID)
 
 ### POSTMAN Test 
-[] POST, /orders
+[X] POST, /orders
 [] GET, /orders/{id}
 [] PUT, /orders/{id}
 [] DELETE , /orders/{id}
