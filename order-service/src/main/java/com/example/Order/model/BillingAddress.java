@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class BillingAddress {
-  @Column(insertable = false, updatable = false)
+  @Column(nullable = false)
   private String recipientName;
 
   @Column(nullable = false)

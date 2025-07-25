@@ -1,10 +1,13 @@
 package com.example.Order.state;
 
 import com.example.Order.enums.OrderStatus;
+import com.example.Order.model.Order;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-public class OrderContextState {
+@Component
+public final class OrderContextState {
    private static final Map<OrderStatus,OrderState> stateMap = Map.of(
            OrderStatus.PENDING, new PendingState(),
            OrderStatus.CONFIRMED, new ConfirmedState(),
@@ -14,8 +17,13 @@ public class OrderContextState {
            OrderStatus.RETURNED, new ReturnedState()
    );
 
-    public OrderState getState(OrderStatus status) {
-        return stateMap.get(status);
-    }
+    private OrderContextState(){}
 
+    public OrderState getState(OrderStatus status) {
+        OrderState state = stateMap.get(status);
+        if(state == null) {
+            throw new IllegalArgumentException("Unsupported OrderStatus:" + status);
+        }
+        return state;
+    }
 }

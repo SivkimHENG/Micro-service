@@ -14,22 +14,22 @@ public class ShippingAddress {
   @Column(nullable = false)
   private String recipientName;
 
-  @Column(insertable = false, updatable = false)
+  @Column(nullable = false )
   private String addressLine1;
 
-  @Column(insertable = false,updatable = false)
+  @Column(nullable = false)
   private String addressLine2;
 
-  @Column(insertable = false, updatable = false)
+  @Column(nullable = false)
   private String city;
 
-  @Column(insertable = false, updatable = false)
+  @Column(nullable = false)
   private String state;
 
-  @Column(insertable = false, updatable = false)
+  @Column(nullable = false)
   private String postalCode;
 
-  @Column(insertable = false, updatable = false)
+  @Column(nullable = false)
   private String country;
 
   private String phoneNumber;

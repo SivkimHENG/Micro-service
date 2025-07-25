@@ -16,6 +16,7 @@ public interface OrderService {
   OrderDto complete(UUID orderId);
   void delete(UUID orderId);
 
+  List<OrderDto> findAllOrder();
 
   OrderDto updateStatus(UUID orderId, OrderStatus newStatus);
   OrderDto updateStatus(UUID orderId, OrderStatus newStatus, String reason);

@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.kafka.common.annotation.InterfaceStability;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -1,12 +1,16 @@
 package com.example.Order.service;
 
+import com.example.Order.assembler.OrderAssembler;
 import com.example.Order.dto.OrderDto;
 import com.example.Order.enums.OrderStatus;
 import com.example.Order.exception.OrderNotFoundException;
 import com.example.Order.mapper.*;
+import com.example.Order.mapper.updateOrder.UpdateOrderMapper;
 import com.example.Order.model.*;
 import com.example.Order.repository.OrderRepository;
-import lombok.AllArgsConstructor;
+import com.example.Order.factory.OrderFactory;
+import com.example.Order.state.OrderContextState;
+import com.example.Order.state.OrderState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -25,110 +28,103 @@ import java.util.UUID;
 public class OrderServiceImpl implements OrderService {
 
   private final OrderRepository orderRepository;
+  private final OrderFactory orderFactory;
+  private final OrderAssembler orderAssembler;
+  private final OrderContextState orderContextState;
+  private final UpdateOrderMapper updateOrderMapper;
 
   private final OrderMapper orderMapper;
-  private final OrderItemMapper orderItemMapper;
-  private final OrderPricingMapper orderPricingMapper;
-  private final ShippingAddressMapper shippingAddressMapper;
-  private final BillingAddressMapper billingAddressMapper;
-
-  private final OrderItemEntityMapper orderItemEntityMapper;
-  private final ShippingAddressEntityMapper shippingAddressEntityMapper;
-  private final BillingAddressEntityMapper billingAddressEntityMapper;
-
-  private static final Map<OrderStatus, List<OrderStatus>> STATUS_TRANSITIONS = Map.of(
-      OrderStatus.PENDING, Arrays.asList(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
-      OrderStatus.CONFIRMED, Arrays.asList(OrderStatus.SHIPPED, OrderStatus.CANCELLED),
-      OrderStatus.SHIPPED, Arrays.asList(OrderStatus.DELIVERED, OrderStatus.RETURNED),
-      OrderStatus.DELIVERED, Arrays.asList(OrderStatus.RETURNED),
-      OrderStatus.CANCELLED, Arrays.asList(),
-      OrderStatus.RETURNED, Arrays.asList());
 
   @Override
   @Transactional
+
+  // NOTE: works
   public OrderDto create(OrderDto request) {
     log.info("Creating order from customer:{}", request.customerId());
 
-    Order order = new Order();
-    order.setOrderNumber(request.orderNumber());
-    order.setCustomerId(request.customerId());
-    order.setStatus(OrderStatus.PENDING);
-    order.setOrderType(request.orderType());
-    order.setCreatedAt(request.createdAt());
-    order.setUpdatedAt(request.updatedAt());
-    order.setNotes(request.notes());
-
-    if (request.shippingAddress() != null) {
-      ShippingAddress shippingAddress = shippingAddressEntityMapper
-          .toEntity(request.shippingAddress());
-      order.setShippingAddress(shippingAddress);
-    }
-
-    if (request.billingAddress() != null) {
-      BillingAddress billingAddress = billingAddressEntityMapper
-          .toEntity(request.billingAddress());
-      order.setBillingAddress(billingAddress);
-    }
-
-    if (request.items() != null && !request.items().isEmpty()) {
-      List<OrderItems> orderItems = request.items().stream()
-          .map(orderItemEntityMapper::toEntity)
-          .peek(item -> item.setOrder(order))
-          .toList();
-      order.setItems(orderItems);
-    }
-
-    if (request.orderPricing() != null) {
-      OrderPricing orderPricing = new OrderPricing();
-      orderPricing.setSubtotal(request.orderPricing().subtotal());
-      orderPricing.setTaxAmount(request.orderPricing().taxAmount());
-      orderPricing.setDiscountAmount(request.orderPricing().DiscountAmount());
-      orderPricing.setCurrency(request.orderPricing().currency());
-      orderPricing.setTotalAmount(request.orderPricing().totalAmount());
-      order.setOrderPricing(orderPricing);
-    }
+    Order order = orderFactory.create(request);
+    orderAssembler.enrich(order, request);
 
     Order savedOrder = orderRepository.save(order);
     log.info("Order created Successfully with ID:{} and order number:{}", savedOrder.getId(),
         savedOrder.getOrderNumber());
-
     return orderMapper.apply(savedOrder);
   }
 
+  //NOTE : WORK
   @Override
-    @Transactional
-    public OrderDto update(UUID orderId, OrderDto request) {
-        log.info("Updating order with ID{}", orderId);
+  @Transactional
+  public OrderDto update(UUID orderId, OrderDto request) {
+    log.info("Updating order with ID{}", orderId);
 
-        Order existingOrder = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order ID doesn't exist our record:" + orderId));
+    Order existingOrder = orderRepository.findById(orderId)
+        .orElseThrow(() -> new OrderNotFoundException("Order ID doesn't exist our record:" + orderId));
 
-        if(existingOrder.getStatus() == OrderStatus.SHIPPED ||
-        existingOrder.getStatus() == OrderStatus.DELIVERED ||
-        existingOrder.getStatus() == OrderStatus.CANCELLED ||
-        existingOrder.getStatus() == OrderStatus.RETURNED) {
-            throw new RuntimeException("Cannot update order in " + existingOrder.getStatus() + " status");
-        }
+    OrderState currentState = orderContextState.getState(existingOrder.getStatus());
 
-
-        if(request.orderType() != null){
-            existingOrder.setOrderType(request.orderType());
-        }
-
-        if(request.notes() != null) {
-            existingOrder.setNotes(request.notes());
-        }
-
-        existingOrder.setUpdatedAt(LocalDateTime.now());
-
-        if(bill)
-
-
-
-
-
+    if (request.status() != null && request.status() != existingOrder.getStatus()) {
+      if (!currentState.canTransitionTo(request.status())) {
+        throw new IllegalStateException("Invalid status transition from "
+            + existingOrder.getStatus() + " to " + request.status());
+      }
+      currentState.apply(existingOrder, request.status(), request.notes());
     }
 
+    updateOrderMapper.updateEntity(existingOrder, request);
+    Order updatedOrder = orderRepository.save(existingOrder);
+
+    return orderMapper.apply(updatedOrder);
+  }
+  //NOTES: WORK
+  @Override
+  @Transactional
+  public OrderDto updateStatus(UUID orderId, OrderStatus newStatus, String reason) {
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new OrderNotFoundException("Order not found" + orderId));
+
+    OrderState currentState = orderContextState.getState(order.getStatus());
+    if (!currentState.canTransitionTo(newStatus)) {
+      throw new IllegalStateException("Transition from " + order.getStatus() + " to " + newStatus + " is not allowed.");
+    }
+
+    currentState.apply(order, newStatus, reason);
+    order.setUpdatedAt(LocalDateTime.now());
+
+    return orderMapper.apply(order);
+
+  }
+
+  @Override
+  @Transactional
+  public OrderDto updateStatus(UUID orderId, OrderStatus newStatus) {
+    return updateStatus(orderId, newStatus, null);
+  }
+
+
+
+
+  //NOTE: WORK
+  @Override
+  public List<OrderStatus> getAllowedStatusTransitions(OrderStatus currentStatus) {
+    OrderState state = orderContextState.getState(currentStatus);
+    return Arrays.stream(OrderStatus.values())
+        .filter(state::canTransitionTo)
+        .toList();
+  }
+
+  @Override
+  public boolean canTransitionTo(OrderStatus from, OrderStatus to) {
+    return orderContextState.getState(from).canTransitionTo(to);
+  }
+
+  //NOTE: work
+  @Override
+  public List<OrderDto> findAllOrder() {
+    log.debug("Fetching all orders");
+    return orderRepository.findAll().stream().map(orderMapper::apply).toList();
+  }
+
+  //NOTE : work
   @Override
   public OrderDto findOrderByOrderNumber(String orderNumber) {
     log.debug("Finding order by number: {}", orderNumber);
@@ -200,4 +196,5 @@ public class OrderServiceImpl implements OrderService {
     orderRepository.deleteById(orderId);
     log.info("Order deleted successfully with ID:{}", orderId);
   }
+
 }

@@ -16,7 +16,7 @@ public class DeliveredState implements OrderState {
             order.setNotes("Returned after delivery: " + reason);
             order.setUpdatedAt(LocalDateTime.now());
         } else {
-            throw new IllegalStateException("Invalid transition from DELIVERED to " + target));
+            throw new IllegalStateException("Invalid transition from DELIVERED to " + target);
         }
 
 

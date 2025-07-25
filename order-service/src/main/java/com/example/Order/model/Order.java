@@ -37,17 +37,39 @@ public class Order {
   @Column(nullable = false)
   private OrderType orderType;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<OrderItems> items = new ArrayList<>();
 
   @Embedded
   private OrderPricing orderPricing;
 
   @Embedded
-  private ShippingAddress shippingAddress;
+  @AttributeOverrides({
+    @AttributeOverride(name = "recipientName", column = @Column(name = "billing_recipient_name")),
+    @AttributeOverride(name = "addressLine1", column = @Column(name = "billing_address_line1")),
+    @AttributeOverride(name = "addressLine2", column = @Column(name = "billing_address_line2")),
+    @AttributeOverride(name = "city", column = @Column(name = "billing_city")),
+    @AttributeOverride(name = "state", column = @Column(name = "billing_state")),
+    @AttributeOverride(name = "postalCode", column = @Column(name = "billing_postal_code")),
+    @AttributeOverride(name = "country", column = @Column(name = "billing_country"))
+  })
+  private BillingAddress billingAddress;
+
 
   @Embedded
-  private BillingAddress billingAddress;
+  @AttributeOverrides({
+          @AttributeOverride(name = "recipientName", column = @Column(name = "shipping_recipient_name")),
+          @AttributeOverride(name = "addressLine1", column = @Column(name = "shipping_address_line1")),
+          @AttributeOverride(name = "addressLine2", column = @Column(name = "shipping_address_line2")),
+          @AttributeOverride(name = "city", column = @Column(name = "shipping_city")),
+          @AttributeOverride(name = "state", column = @Column(name = "shipping_state")),
+          @AttributeOverride(name = "postalCode", column = @Column(name = "shipping_postal_code")),
+          @AttributeOverride(name = "country", column = @Column(name = "shipping_country")),
+          @AttributeOverride(name = "phoneNumber", column = @Column(name = "shipping_phone_number"))
+  })
+  private ShippingAddress shippingAddress;
+
+
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
