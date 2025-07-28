@@ -1,6 +1,8 @@
 spring:
   application:
     name: user-service
+  profiles:
+    active: dev
   datasource:
     url: jdbc:postgresql://localhost:5432/user_microservice
     username: postgres
@@ -35,6 +37,12 @@ management:
   endpoint:
     health:
       show-details: always
+
+security:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
+    access-token-expiration: 900000    # 15 minutes in milliseconds
+    refresh-token-expiration: 86400000 # 24 hours in milliseconds
 
 logging:
   level:
