@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 public class User implements UserDetails {
@@ -79,22 +80,5 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public void setEnabled(boolean b) { }
 }

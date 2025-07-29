@@ -15,8 +15,7 @@ import java.util.Map;
 
 
 @RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
+public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -35,13 +34,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(CredentialException.class)
+    @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<String> handleBadCredentialException(BadCredentialsException ex) {
         logger.error("Authentication error:{}" , ex.getMessage(),ex);
         return new ResponseEntity<>("Invalid username  or password", HttpStatus.UNAUTHORIZED);
-
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String,Object>> handleAllException(Exception ex) {
+        logger.error("Unhandled exception:", ex);
+        Map<String,Object> error = new HashMap<>();
+        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
 
 

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,17 +28,20 @@ import java.util.stream.LongStream;
 
 @Configuration
 @EnableWebSecurity
-@Profile("dev")
 public class SecurityConfig {
-
 
     @Autowired
     private JwtTokenService jwtTokenService;
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private  CustomUserDetailsService userDetailsService;
     @Autowired
     private JwtFilter jwtFilter;
 
+    public SecurityConfig(JwtTokenService jwtTokenService, CustomUserDetailsService userDetailsService, JwtFilter jwtFilter) {
+        this.jwtTokenService = jwtTokenService;
+        this.userDetailsService = userDetailsService;
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -59,7 +64,7 @@ public class SecurityConfig {
                 .sessionManagement(
                         session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.disable()).build();
+                .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
@@ -68,19 +73,14 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration  = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("localhost:8081","localhost:8082"));
-        configuration.setAllowedMethods(List.of("GET","PUT","POST"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:8081","http://localhost:8082"));
+        configuration.setAllowedMethods(List.of("GET","PUT","POST", "DELETE"));
         configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**",configuration);
         return source;
     }
-
-
-
-
-
     @Bean
     public AuthenticationManager authenticationManager (AuthenticationConfiguration configuration) throws Exception{
         return configuration.getAuthenticationManager();
@@ -89,10 +89,9 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    @Bean
-    public JwtFilter jwtFilter() {
-        return new JwtFilter(jwtTokenService,userDetailsService);
-    }
+
+
+
 
 
 }

@@ -5,14 +5,13 @@ import com.example.user_service.enums.Roles;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepository;
 import com.example.user_service.security.JwtTokenService;
-import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.management.relation.Role;
@@ -20,23 +19,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.LongStream;
 
+@Service
 public class AuthServiceImpl implements AuthService{
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenService jwtTokenService;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtTokenService jwtTokenService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
-
+    public AuthServiceImpl(UserRepository userRepository, AuthenticationManager authenticationManager, JwtTokenService jwtTokenService, PasswordEncoder passwordEncoder, CustomUserDetailsService userDetailsService) {
+        this.userRepository = userRepository;
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenService = jwtTokenService;
+        this.passwordEncoder = passwordEncoder;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     public UserDto register(RegisterRequestDto registerRequestDto){
@@ -61,7 +59,7 @@ public class AuthServiceImpl implements AuthService{
             user.setRoles(Collections.singletonList(Roles.CUSTOMER));
         }
 
-        user.isEnabled();
+        user.setEnabled(true);
 
         User registeredUser = userRepository.save(user);
 
@@ -91,7 +89,7 @@ public class AuthServiceImpl implements AuthService{
                         authRequestDto.username(),
                         authRequestDto.password()
                 ));
-        UserDetails userDetails = (User) auth.getPrincipal();
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String accessToken = jwtTokenService.generateAccessToken(userDetails);
         String refreshToken = jwtTokenService.generateRefreshToken(userDetails);
 
@@ -163,9 +161,6 @@ public class AuthServiceImpl implements AuthService{
         String username = jwtTokenService.getUsernameFromToken(token);
         return jwtTokenService.isValidRefreshToken(token,username);
     }
-
-
-
 
 
 
