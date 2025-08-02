@@ -20,7 +20,7 @@ import java.util.List;
 @Table(name = "users")
 @Getter
 @Setter
-public class User implements UserDetails {
+public class User implements UserDetails  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +34,10 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+
+
+    @Column(nullable = false)
+    private boolean isActive;
 
     @Enumerated(EnumType.STRING)
     private List<Roles> roles;

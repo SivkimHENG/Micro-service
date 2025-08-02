@@ -49,7 +49,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-
+    @ExceptionHandler(RoleExceptionHandler.class)
+    public ResponseEntity<Map<String,Object>> handleRoleException(RoleExceptionHandler handler) {
+        logger.error("Role Exception:", handler);
+        Map<String,Object> error = new HashMap<>();
+        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        error.put("message", handler.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
 
 
