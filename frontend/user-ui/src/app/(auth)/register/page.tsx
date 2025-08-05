@@ -17,7 +17,7 @@ export default function RegisterPage() {
       setErrors(result.errors);
     } else {
       // Redirect on success
-      window.location.href = "/auth/login";
+      window.location.href = "/login";
     }
   }
 
@@ -33,7 +33,7 @@ export default function RegisterPage() {
       </div>
       <div>
         <label>
-          Email
+          email
           <input name="email" type="email" placeholder="you@example.com" />
         </label>
         {errors.email && <p className="text-red-600">{errors.email}</p>}
@@ -67,3 +67,5 @@ export default function RegisterPage() {
     </form>
   );
 }
+
+

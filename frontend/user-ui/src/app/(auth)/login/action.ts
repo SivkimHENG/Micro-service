@@ -1,47 +1,116 @@
 "use server"
-import z, { email } from "zod";
 
-const passwordSchema = z.string()
-  .min(12, { message: "Password must be at least 12 characters long" })
-  .max(64, { message: "Password must not exceed 64 characters" })
-  .regex(/[A-Z]/, { message: "Password must include at least one uppercase letter" })
-  .regex(/[a-z]/, { message: "Password must include at least one lowercase letter" })
-  .regex(/\d/, { message: "Password must include at least one number" })
-  .regex(/[^A-Za-z0-9]/, { message: "Password must include at least one special character" })
-  .regex(/^\S*$/, { message: "Password must not contain spaces" });
+import api from "@/lib/api";
+import { AxiosError } from "axios";
+import { z } from "zod";
 
 const loginSchema = z.object({
-
-  email: z.email({ message: "Invalid Email" }),
-  password: passwordSchema
-
+  username: z.string().min(1, "Username is required").trim(),
+  password: z.string().min(1, "Password is required")
 });
 
-export type LoginResult = | { success: true, userId: string }
-  | { success: false, error: Record<string, string> }
-
+export type LoginResult =
+  | { success: true; accessToken: string; refreshToken: string; username: string }
+  | { success: false; errors: Record<string, string> };
 
 export async function LoginAction(formData: FormData): Promise<LoginResult> {
-  const rawEmail = formData.get("email")
-  const rawPassword = formData.get("password")
+  const raw = {
+    username: formData.get("username"),
+    password: formData.get("password")
+  };
+
+  console.log("Raw form data:", {
+    username: raw.username,
+    passwordProvided: !!raw.password
+  });
 
   const data = {
-    email: typeof rawEmail === "string" ? rawEmail : "",
-    password: typeof rawPassword === "string" ? rawPassword : ""
+    username: typeof raw.username === "string" ? raw.username.trim() : "",
+    password: typeof raw.password === "string" ? raw.password : ""
+  };
+
+  console.log("Processed data:", {
+    username: data.username,
+    passwordLength: data.password.length
+  });
+
+  const parsed = loginSchema.safeParse(data);
+
+  if (!parsed.success) {
+    console.log("Validation failed:", parsed.error.flatten().fieldErrors);
+
+    const errs: Record<string, string> = {};
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+
+    for (const [field, msgs] of Object.entries(fieldErrors)) {
+      if (msgs && msgs.length > 0) {
+        errs[field] = msgs.join(", ");
+      }
+    }
+
+    return { success: false, errors: errs };
   }
 
-  const result = loginSchema.safeParse(data);
-
-  if (!result.success) {
-
-
-    const errors: Record<string, string> = {};
-    result.error.flatten((field, msgs) => {
-      if (msgs?.length) errors[field] = msgs.join(", ");
+  try {
+    console.log("Sending login request to:", "/v1/api/auth/login");
+    console.log("Request payload:", {
+      username: parsed.data.username,
+      passwordLength: parsed.data.password.length
     });
 
-    return { success: false, errors };
+    const resp = await api.post("/v1/api/auth/login", {
+      username: parsed.data.username,
+      password: parsed.data.password,
+    });
+
+    console.log("Login successful:", {
+      status: resp.status,
+      hasAccessToken: !!resp.data.accessToken,
+      hasRefreshToken: !!resp.data.refreshToken
+    });
+
+    // Store tokens in localStorage or cookies
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('accessToken', resp.data.accessToken);
+      localStorage.setItem('refreshToken', resp.data.refreshToken);
+    }
+
+    return {
+      success: true,
+      accessToken: resp.data.accessToken,
+      refreshToken: resp.data.refreshToken,
+      username: parsed.data.username
+    };
+
+  } catch (err: unknown) {
+    console.error("Login error:", err);
+
+    const errs: Record<string, string> = {};
+
+    if (err instanceof AxiosError) {
+      console.log("Axios error details:", {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data
+      });
+
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        errs.general = "Invalid username or password";
+      } else if (err.response?.data?.errors) {
+        for (const [k, v] of Object.entries(err.response.data.errors as Record<string, unknown>)) {
+          errs[k] = Array.isArray(v) ? v.join(", ") : String(v);
+        }
+      } else if (err.response?.data?.message) {
+        errs.general = String(err.response.data.message);
+      } else if (err.code === 'NETWORK_ERROR' || err.code === 'ECONNREFUSED') {
+        errs.general = "Unable to connect to server. Please try again later.";
+      } else {
+        errs.general = "Login failed. Please try again.";
+      }
+    } else {
+      errs.general = err instanceof Error ? err.message : "An unknown error occurred";
+    }
+
+    return { success: false, errors: errs };
   }
-
 }
-

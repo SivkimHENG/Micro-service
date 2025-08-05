@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const passwordSchema = z
   .string()
-  .min(12, { message: "Must be at least 12 characters" })
+  .min(8, { message: "Must be at least 12 characters" })
   .max(64, { message: "Must not exceed 64 characters" })
   .regex(/[A-Z]/, { message: "Must include an uppercase letter" })
   .regex(/[a-z]/, { message: "Must include a lowercase letter" })
@@ -33,7 +33,6 @@ export type RegisterResult =
 export async function RegisterAction(
   formData: FormData
 ): Promise<RegisterResult> {
-  // 1) Coerce FormData → plain strings
   const raw = {
     username: formData.get("username"),
     email: formData.get("email"),
