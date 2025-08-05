@@ -3,6 +3,8 @@
 import api from "@/lib/api";
 import { AxiosError } from "axios";
 import { z } from "zod";
+import { cookies } from "next/headers";
+
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required").trim(),
@@ -51,6 +53,8 @@ export async function LoginAction(formData: FormData): Promise<LoginResult> {
     return { success: false, errors: errs };
   }
 
+
+
   try {
     console.log("Sending login request to:", "/v1/api/auth/login");
     console.log("Request payload:", {
@@ -62,6 +66,26 @@ export async function LoginAction(formData: FormData): Promise<LoginResult> {
       username: parsed.data.username,
       password: parsed.data.password,
     });
+
+
+    const cookieStore = await cookies()
+
+    cookieStore.set("accessToken", resp.data.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/"
+    });
+
+    cookieStore.set("refreshToken", resp.data.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/"
+    });
+
+
+
 
     console.log("Login successful:", {
       status: resp.status,
@@ -114,3 +138,5 @@ export async function LoginAction(formData: FormData): Promise<LoginResult> {
     return { success: false, errors: errs };
   }
 }
+
+
